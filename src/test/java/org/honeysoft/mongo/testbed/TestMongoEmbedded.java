@@ -15,18 +15,16 @@
  */
 package org.honeysoft.mongo.testbed;
 
-import com.lordofthejars.nosqlunit.annotation.UsingDataSet;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import org.fest.assertions.Assertions;
-import org.honeysoft.monogo.testbed.CollectionManager;
 import org.honeysoft.monogo.testbed.MongoManager;
 import org.honeysoft.monogo.testbed.annotation.MongoCollection;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
- * Tests coordination between {@link org.honeysoft.monogo.testbed.MongoManager} and {@link org.honeysoft.monogo.testbed.CollectionManager}
+ * Tests embedded mongo
  */
 public class TestMongoEmbedded {
 
@@ -35,6 +33,8 @@ public class TestMongoEmbedded {
 
     @MongoCollection(name="test_collection", location = "test_collection.json")
     public static DBCollection collection;
+
+
 
     @Test
     public void shouldHaveAllDataInMongo() {

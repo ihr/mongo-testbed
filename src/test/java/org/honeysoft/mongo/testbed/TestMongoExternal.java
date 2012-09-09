@@ -21,15 +21,17 @@ import org.fest.assertions.Assertions;
 import org.honeysoft.monogo.testbed.MongoManager;
 import org.honeysoft.monogo.testbed.annotation.MongoCollection;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Tests coordination between {@link org.honeysoft.monogo.testbed.MongoManager} and {@link org.honeysoft.monogo.testbed.CollectionManager}
+ * Tests external mongo database
  */
+@Ignore
 public class TestMongoExternal {
 
     @ClassRule
-    public static MongoManager mongoManager = new MongoManager();
+    public static MongoManager mongoManager = new MongoManager("/usr/local/bin/mongod", "/data/mongo_testbed");
 
     @MongoCollection(name="test_collection", location = "test_collection.json")
     public static DBCollection collection;

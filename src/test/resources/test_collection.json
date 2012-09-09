@@ -1,0 +1,52 @@
+[
+    {
+        "_id": "4aac186d27235d8cf3b4b2c4",
+        "second_level": {
+            "second_level_string": "Second level string",
+            "second_level_int": 123
+        },
+        "dateAsLong": 61302693600000,
+        "first_level_string": "First level string",
+        "first_level_boolean": false
+    },
+    {
+        "_id": "5ffc377727145d8bc3e3b1a5",
+        "second_level": {
+            "second_level_string": "Second level string",
+            "second_level_int": 123
+        },
+        "dateAsLong": 61302693600000,
+        "first_level_string": "First level string",
+        "first_level_boolean": false
+    },
+    {
+        "_id": "513b80533114452630aaaff1",
+        "second_level": {
+            "second_level_string_array": [ "Second level string [first element]" ],
+            "second_level_int": 333,
+            "second_level_string": "Second level string"
+        },
+        "dateAsLong": 61302693600000,
+        "first_level_string": "First level string",
+        "first_level_boolean": false
+    },
+    {
+        "_id": "103b9eb02116fcc3f8aac2ff",
+        "second_level": {
+            "second_level_string_array": [ "Second level string [first element]", "Second level string [second element]" ],
+            "second_level_string": "Second level string",
+            "second_level_int_array": [
+                {
+                    "second_level_int_first_element": 20
+                },
+                {
+                    "second_level_int_second_element": 30
+                }
+            ],
+            "second_level_int": 761
+        },
+        "dateAsLong": 1346484538352,
+        "first_level_string": "First level string",
+        "first_level_boolean": true
+    }
+]
