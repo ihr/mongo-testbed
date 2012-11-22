@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.honeysoft.monogo.testbed;
+package org.ingini.monogo.testbed;
 
 import com.mongodb.*;
 import com.mongodb.util.JSON;
@@ -26,21 +26,26 @@ import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import org.bson.BSONObject;
 import org.bson.types.ObjectId;
-import org.honeysoft.monogo.testbed.annotation.MongoCollection;
+import org.ingini.monogo.testbed.annotation.MongoTestBedCollection;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.lang.annotation.Annotation;
+import javax.inject.Inject;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.nio.CharBuffer;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import static org.fest.reflect.core.Reflection.*;
+import static org.fest.reflect.core.Reflection.field;
 
 /**
  * A mongo DB manager to be used as JUnit rule
@@ -49,8 +54,8 @@ public class MongoManager implements TestRule {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static final String MONOGO_TESTBED_DB = "monogo-testbed-db";
-    public static final String MONGODB_TESTBED_INSTANCE = "mongodb-testbed-instance";
+    public static final String MONOGO_TESTBED_DB = "monogo_testbed_db";
+    public static final String MONGODB_TESTBED_INSTANCE = "mongodb_testbed_instance";
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 9819;
 
@@ -69,13 +74,22 @@ public class MongoManager implements TestRule {
 
     private Future<?> externalMongoThread;
 
-    public MongoManager() {
+
+    public static MongoManager mongoFlapdoodle() {
+        return new MongoManager(DEFAULT_PORT);
+    }
+
+    public static MongoManager mongoFlapdoodle(int port) {
+        return new MongoManager(port);
+    }
+
+    private MongoManager(int port) {
 
         logger.debug("Starting Mongo-TestBed coordinator ...");
         try {
 
             MongodStarter runtime = MongodStarter.getDefaultInstance();
-            mongodExe = runtime.prepare(new MongodConfig(Version.V2_2_0, DEFAULT_PORT, Network.localhostIsIPv6()));
+            mongodExe = runtime.prepare(new MongodConfig(Version.V2_2_0, port, Network.localhostIsIPv6()));
             mongod = mongodExe.start();
 
             mongo = new Mongo(DEFAULT_HOST, DEFAULT_PORT);
@@ -89,13 +103,17 @@ public class MongoManager implements TestRule {
         }
     }
 
+    public static MongoManager mongoStartLocal(String command, final String dbpath) {
+        return new MongoManager(command, dbpath);
+    }
+
     /**
-     * Use this constructor if you want to redirect the MongoDB output to a specific file.
+     * Use this constructor if you want to run mongoDB via system command
      *
      * @param command
      * @param dbpath  directory for datafiles
      */
-    public MongoManager(final String command, final String dbpath) {
+    private MongoManager(final String command, final String dbpath) {
         try {
 
             externalMongoThread = executorService.submit(new Runnable() { //TODO externalize into a separate class
@@ -129,24 +147,64 @@ public class MongoManager implements TestRule {
         }
     }
 
+    /**
+     * Use this method to connect to a running instance of MongoDB
+     *
+     * @param uri pointing to the runing MongoDB instance
+     * @return
+     * @throws IllegalStateException in case of difficulties while connecting
+     */
+    public static MongoManager mongoConnect(String uri) {
+        return new MongoManager(uri);
+    }
+
+    /**
+     * Tries to connect to a given running MongoDB instance at {@code uri}
+     * <p>Example URIs:</p>
+     *      *) mongodb://127.0.0.1:27017 - connecting to 127.0.0.1 @ port 27017 without authenticating
+     *      *) mongodb://john:doe@127.0.0.1:27017 - connecting to 127.0.0.1 @ port 27017 with username: 'john' and password: 'doe'
+     *      *) mongodb://john:@127.0.0.1:27017 - connecting to 127.0.0.1 @ port 27017 with username: 'john' and empty password
+     * @param uri
+     * @throws IllegalStateException in case of difficulties while connecting
+     */
+    private MongoManager(String uri) {
+        MongoURI mongoURI = new MongoURI(uri);
+        try {
+            this.mongo = mongoURI.connect();
+        } catch (UnknownHostException e) {
+            logger.error("Could not connect to {} due to an exception!", uri, e);
+            throw new IllegalStateException(e);
+        }
+        this.mongoDB = mongo.getDB(MONOGO_TESTBED_DB);
+        if (mongoURI.getUsername() != null) {
+            this.mongoDB.authenticate(mongoURI.getUsername(), mongoURI.getPassword());
+        }
+    }
+
     @Override
     public Statement apply(final Statement base, Description description) {
 
 
         Field[] declaredFields = description.getTestClass().getDeclaredFields();
         for (Field field : declaredFields) {
-            Annotation[] annotations = field.getDeclaredAnnotations();
-            for (Annotation annotation : annotations) {
-                if (annotation instanceof MongoCollection) {
-                    String location = ((MongoCollection) annotation).location();
-                    String name = ((MongoCollection) annotation).name();
-                    if (mongoDB.collectionExists(name)) {
-                        logger.debug("Dropping already existing mongo collection {}", name);
-                        mongoDB.getCollection(name).drop();
-                    }
-                    DBCollection collection = mongoDB.createCollection(name, new BasicDBObject());
-                    fill(collection, location);
-                    field(field.getName()).ofType(DBCollection.class).in(description.getTestClass()).set(collection);
+            if (field.isAnnotationPresent(MongoTestBedCollection.class)) {
+                MongoTestBedCollection annotation = field.getAnnotation(MongoTestBedCollection.class);
+                String location = annotation.location();
+                String name = annotation.name();
+                if (mongoDB.collectionExists(name)) {
+                    logger.debug("Dropping already existing mongo collection {}", name);
+                    mongoDB.getCollection(name).drop();
+                }
+                DBCollection collection = mongoDB.createCollection(name, new BasicDBObject());
+                fill(collection, location);
+                field(field.getName()).ofType(DBCollection.class).in(description.getTestClass()).set(collection);
+            }
+
+            if (field.isAnnotationPresent(Inject.class)) {
+                if (field.getType() == Mongo.class) {
+                    field(field.getName()).ofType(Mongo.class).in(description.getTestClass()).set(mongo);
+                } else if (field.getType() == DB.class) {
+                    field(field.getName()).ofType(DB.class).in(description.getTestClass()).set(mongoDB);
                 }
             }
         }
@@ -155,6 +213,7 @@ public class MongoManager implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 try {
+
                     base.evaluate();
                 } finally {
                     logger.debug("Stopping Mongo TestBed ...");

@@ -13,31 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.honeysoft.mongo.testbed;
+package org.ingini.mongo.testbed;
 
+import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
 import org.fest.assertions.Assertions;
-import org.honeysoft.monogo.testbed.MongoManager;
-import org.honeysoft.monogo.testbed.annotation.MongoCollection;
+import org.ingini.monogo.testbed.MongoManager;
+import org.ingini.monogo.testbed.annotation.MongoTestBedCollection;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import javax.inject.Inject;
 
 /**
  * Tests external mongo database
  */
-@Ignore
-public class TestMongoExternal {
+public class TestMongoConnect {
 
     @ClassRule
-    public static MongoManager mongoManager = new MongoManager("/usr/local/bin/mongod", "/data/mongo_testbed");
+    public static MongoManager mongoManager = MongoManager.mongoConnect("mongodb://127.0.0.1:27017");
 
-    @MongoCollection(name="test_collection", location = "test_collection.json")
+    @MongoTestBedCollection(name="test_collection", location = "test_collection.json")
     public static DBCollection collection;
 
+    @Inject
+    public static Mongo mongo;
+
+    @Inject
+    public static DB mongoDB;
+
     @Test
-    public void shouldHaveAllDataInMongo() {
+    public void shouldHaveAllDataInMongoAndInjectAnnotatedFields() {
         //GIVEN
 
         //WHEN
@@ -45,5 +53,7 @@ public class TestMongoExternal {
 
         //THEN
         Assertions.assertThat((Iterable<?>) dbObjects).hasSize(4);
+        Assertions.assertThat(mongo).isNotNull();
+        Assertions.assertThat(mongoDB).isNotNull();
     }
 }
