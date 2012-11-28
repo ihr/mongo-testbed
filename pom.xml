@@ -6,7 +6,7 @@
 
     <groupId>org.ingini.mongodb</groupId>
     <artifactId>mongo-testbed</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <name>Mongo TestBed</name>
 
