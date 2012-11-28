@@ -18,9 +18,10 @@ package org.ingini.mongo.testbed;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import org.fest.assertions.Assertions;
-import org.honeysoft.monogo.testbed.MongoManager;
-import org.honeysoft.monogo.testbed.annotation.MongoTestBedCollection;
+import org.ingini.monogo.testbed.MongoManager;
+import org.ingini.monogo.testbed.annotation.MongoTestBedCollection;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -37,6 +38,7 @@ public class TestMongoEmbeddedFlapdoodle {
 
 
     @Test
+    @Ignore
     public void shouldHaveAllDataInMongo() {
         //GIVEN
 
