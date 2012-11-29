@@ -6,9 +6,12 @@
 
     <groupId>org.ingini.mongodb</groupId>
     <artifactId>mongo-testbed</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
+    <packaging>jar</packaging>
 
     <name>Mongo TestBed</name>
+    <description>Facilitating Java integration test development for MongoDB</description>
+    <url>https://github.com/ihr/mongo-testbed</url>
 
     <properties>
         <slf4j-api.version>1.6.6</slf4j-api.version>
@@ -20,6 +23,17 @@
         <fest-assert.version>1.4</fest-assert.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <scm>
+        <connection>scm:git:git@github.com:ihr/mongo-testbed.git</connection>
+        <developerConnection>scm:git:git@github.com:ihr/mongo-testbed.git</developerConnection>
+        <url>git@github.com:ihr/mongo-testbed</url>
+    </scm>
+
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/ihr/mongo-testbed/issues</url>
+    </issueManagement>
 
     <prerequisites>
         <maven>2.2.1</maven>
@@ -96,5 +110,23 @@
         </dependency>
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
